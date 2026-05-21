@@ -2,65 +2,72 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace PolynomialCalculator;
-
-/// <summary>
-/// Протокол работы калькулятора — пишет события в текстовый файл.
-/// </summary>
-public sealed class Logger
+namespace PolynomialCalculator
 {
-    private readonly object _lock = new();
-
-    public string FilePath { get; }
-
-    public Logger(string filePath)
+    /// <summary>
+    /// Протокол работы калькулятора — пишет события в текстовый файл.
+    /// </summary>
+    public sealed class Logger
     {
-        FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+        private readonly object _lock = new object();
+        private readonly string _filePath;
 
-        var dir = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            Directory.CreateDirectory(dir);
+        public string FilePath { get { return _filePath; } }
 
-        if (!File.Exists(filePath))
+        public Logger(string filePath)
         {
-            File.WriteAllText(filePath,
-                "=== Протокол работы калькулятора многочленов ===" + Environment.NewLine,
-                Encoding.UTF8);
+            if (filePath == null) throw new ArgumentNullException("filePath");
+            _filePath = filePath;
+
+            var dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            if (!File.Exists(filePath))
+            {
+                File.WriteAllText(filePath,
+                    "=== Протокол работы калькулятора многочленов ===" + Environment.NewLine,
+                    Encoding.UTF8);
+            }
         }
-    }
 
-    public void Log(string message)
-    {
-        var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}";
-        lock (_lock)
+        public void Log(string message)
         {
-            File.AppendAllText(FilePath, line, Encoding.UTF8);
+            string line = "[" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "] " +
+                          message + Environment.NewLine;
+            lock (_lock)
+            {
+                File.AppendAllText(_filePath, line, Encoding.UTF8);
+            }
         }
-    }
 
-    public void LogError(string message) => Log("ОШИБКА: " + message);
-
-    public void LogSession(string title)
-    {
-        Log(new string('-', 60));
-        Log(title);
-    }
-
-    public string ReadAll()
-    {
-        lock (_lock)
+        public void LogError(string message)
         {
-            return File.Exists(FilePath) ? File.ReadAllText(FilePath, Encoding.UTF8) : string.Empty;
+            Log("ОШИБКА: " + message);
         }
-    }
 
-    public void Clear()
-    {
-        lock (_lock)
+        public void LogSession(string title)
         {
-            File.WriteAllText(FilePath,
-                "=== Протокол работы калькулятора многочленов ===" + Environment.NewLine,
-                Encoding.UTF8);
+            Log(new string('-', 60));
+            Log(title);
+        }
+
+        public string ReadAll()
+        {
+            lock (_lock)
+            {
+                return File.Exists(_filePath) ? File.ReadAllText(_filePath, Encoding.UTF8) : string.Empty;
+            }
+        }
+
+        public void Clear()
+        {
+            lock (_lock)
+            {
+                File.WriteAllText(_filePath,
+                    "=== Протокол работы калькулятора многочленов ===" + Environment.NewLine,
+                    Encoding.UTF8);
+            }
         }
     }
 }

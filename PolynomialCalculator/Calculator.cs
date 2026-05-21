@@ -1,88 +1,98 @@
 using System;
 using System.Globalization;
 
-namespace PolynomialCalculator;
-
-/// <summary>
-/// Калькулятор многочленов: хранит «текущий результат» (как обычный калькулятор)
-/// и выполняет операции с другим многочленом. Все действия пишутся в Logger.
-/// </summary>
-public sealed class Calculator
+namespace PolynomialCalculator
 {
-    private readonly Logger _logger;
-    public Polynomial Current { get; private set; } = new Polynomial(0.0);
-
-    public Calculator(Logger logger)
+    /// <summary>
+    /// Калькулятор многочленов: хранит «текущий результат» (как обычный калькулятор)
+    /// и выполняет операции с другим многочленом. Все действия пишутся в Logger.
+    /// </summary>
+    public sealed class Calculator
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        private readonly Logger _logger;
+        private Polynomial _current = new Polynomial(0.0);
 
-    public void Reset()
-    {
-        Current = new Polynomial(0.0);
-        _logger.Log("СБРОС результата. Текущий результат = 0.");
-    }
+        public Polynomial Current { get { return _current; } }
+        public Logger Logger { get { return _logger; } }
 
-    public void SetCurrent(Polynomial p)
-    {
-        Current = p ?? throw new ArgumentNullException(nameof(p));
-        _logger.Log($"ЗАГРУЗКА в результат: {p}  (коэф. {p.ToCoefficientList()})");
-    }
+        public Calculator(Logger logger)
+        {
+            if (logger == null) throw new ArgumentNullException("logger");
+            _logger = logger;
+        }
 
-    public Polynomial Add(Polynomial other)
-    {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        var r = Current + other;
-        _logger.Log($"СЛОЖЕНИЕ: ({Current}) + ({other}) = {r}");
-        Current = r;
-        return r;
-    }
+        public void Reset()
+        {
+            _current = new Polynomial(0.0);
+            _logger.Log("СБРОС результата. Текущий результат = 0.");
+        }
 
-    public Polynomial Subtract(Polynomial other)
-    {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        var r = Current - other;
-        _logger.Log($"ВЫЧИТАНИЕ: ({Current}) - ({other}) = {r}");
-        Current = r;
-        return r;
-    }
+        public void SetCurrent(Polynomial p)
+        {
+            if (p == null) throw new ArgumentNullException("p");
+            _current = p;
+            _logger.Log("ЗАГРУЗКА в результат: " + p + "  (коэф. " + p.ToCoefficientList() + ")");
+        }
 
-    public Polynomial Multiply(Polynomial other)
-    {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        var r = Current * other;
-        _logger.Log($"УМНОЖЕНИЕ: ({Current}) * ({other}) = {r}");
-        Current = r;
-        return r;
-    }
+        public Polynomial Add(Polynomial other)
+        {
+            if (other == null) throw new ArgumentNullException("other");
+            var r = _current + other;
+            _logger.Log("СЛОЖЕНИЕ: (" + _current + ") + (" + other + ") = " + r);
+            _current = r;
+            return r;
+        }
 
-    public (Polynomial quotient, Polynomial remainder) Divide(Polynomial other)
-    {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        var (q, r) = Polynomial.DivMod(Current, other);
-        _logger.Log($"ДЕЛЕНИЕ: ({Current}) / ({other}) = ({q}); остаток = ({r})");
-        Current = q;
-        return (q, r);
-    }
+        public Polynomial Subtract(Polynomial other)
+        {
+            if (other == null) throw new ArgumentNullException("other");
+            var r = _current - other;
+            _logger.Log("ВЫЧИТАНИЕ: (" + _current + ") - (" + other + ") = " + r);
+            _current = r;
+            return r;
+        }
 
-    public Polynomial Power(int n)
-    {
-        var r = Current.Power(n);
-        _logger.Log($"СТЕПЕНЬ: ({Current})^{n} = {r}");
-        Current = r;
-        return r;
-    }
+        public Polynomial Multiply(Polynomial other)
+        {
+            if (other == null) throw new ArgumentNullException("other");
+            var r = _current * other;
+            _logger.Log("УМНОЖЕНИЕ: (" + _current + ") * (" + other + ") = " + r);
+            _current = r;
+            return r;
+        }
 
-    public double EvaluateAt(double x)
-    {
-        double v = Current.Evaluate(x);
-        _logger.Log(
-            $"ЗНАЧЕНИЕ: P({x.ToString("G", CultureInfo.InvariantCulture)}) = " +
-            v.ToString("G", CultureInfo.InvariantCulture) +
-            $", где P(x) = {Current}");
-        return v;
-    }
+        public void Divide(Polynomial other, out Polynomial quotient, out Polynomial remainder)
+        {
+            if (other == null) throw new ArgumentNullException("other");
+            Polynomial q, rem;
+            Polynomial.DivMod(_current, other, out q, out rem);
+            _logger.Log("ДЕЛЕНИЕ: (" + _current + ") / (" + other + ") = (" + q +
+                        "); остаток = (" + rem + ")");
+            _current = q;
+            quotient = q;
+            remainder = rem;
+        }
 
-    public void LogError(string message) => _logger.LogError(message);
-    public Logger Logger => _logger;
+        public Polynomial Power(int n)
+        {
+            var r = _current.Power(n);
+            _logger.Log("СТЕПЕНЬ: (" + _current + ")^" + n + " = " + r);
+            _current = r;
+            return r;
+        }
+
+        public double EvaluateAt(double x)
+        {
+            double v = _current.Evaluate(x);
+            _logger.Log("ЗНАЧЕНИЕ: P(" + x.ToString("G", CultureInfo.InvariantCulture) + ") = " +
+                        v.ToString("G", CultureInfo.InvariantCulture) +
+                        ", где P(x) = " + _current);
+            return v;
+        }
+
+        public void LogError(string message)
+        {
+            _logger.LogError(message);
+        }
+    }
 }

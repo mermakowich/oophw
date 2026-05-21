@@ -8,7 +8,9 @@
 результата. Все действия записываются в файл протокола; протокол можно
 просмотреть из самой программы.
 
-Язык: **C#**, графический интерфейс: **Windows Forms (.NET 8)**.
+Язык: **C#** (LangVersion 7.3), графический интерфейс: **Windows Forms,
+.NET Framework 4.7.2** — предустановлен на любой Windows 10/11, дополнительные
+runtime-ы ставить не нужно.
 
 ---
 
@@ -18,48 +20,52 @@
 oophw/
 ├── PolynomialCalculator.sln          ← решение Visual Studio
 ├── PolynomialCalculator/
-│   ├── PolynomialCalculator.csproj   ← проект .NET 8 / WinForms
+│   ├── PolynomialCalculator.csproj   ← проект .NET Framework 4.7.2 / WinForms
+│   ├── App.config                    ← конфигурация runtime
 │   ├── Program.cs                    ← точка входа
-│   ├── MainForm.cs                   ← главная форма
-│   ├── LogViewerForm.cs              ← окно просмотра протокола
+│   ├── MainForm.cs                   ← главная форма (логика)
+│   ├── MainForm.Designer.cs          ← главная форма (designer-часть)
+│   ├── MainForm.resx                 ← ресурсы главной формы
+│   ├── LogViewerForm.cs              ← окно просмотра протокола (логика)
+│   ├── LogViewerForm.Designer.cs     ← окно просмотра протокола (designer)
+│   ├── LogViewerForm.resx            ← ресурсы окна протокола
 │   ├── Polynomial.cs                 ← класс «Многочлен» (+ перегруженные операторы)
 │   ├── Calculator.cs                 ← класс «Калькулятор»
-│   └── Logger.cs                     ← класс «Протокол»
+│   ├── Logger.cs                     ← класс «Протокол»
+│   └── Properties/
+│       └── AssemblyInfo.cs           ← атрибуты сборки
 ├── README.md
 └── .gitignore
 ```
 
 ## 2. Запуск на любом компьютере с Windows
 
-### Вариант А — самый простой (с установленным .NET 8)
+На Windows 10/11 .NET Framework 4.7.2 (и более поздние) уже установлен,
+поэтому ничего ставить не нужно.
 
-1. Установите **.NET 8 Desktop Runtime** (один раз):
-   https://dotnet.microsoft.com/download/dotnet/8.0 →
-   «.NET Desktop Runtime 8.0.x» → Windows x64.
-2. Скачайте/клонируйте репозиторий.
-3. Откройте папку проекта в **PowerShell** или в **Командной строке** и
-   выполните:
+### Способ 1 — открыть в Visual Studio
 
-   ```powershell
-   dotnet run --project PolynomialCalculator
-   ```
+1. Клонировать (или скачать ZIP-архивом и распаковать) репозиторий.
+2. Двойной щелчок по `PolynomialCalculator.sln` — откроется в **Visual Studio
+   2017 / 2019 / 2022**.
+3. Нажать **F5** (или зелёную «стрелку» Start) — проект соберётся и запустится.
 
-   либо просто откройте `PolynomialCalculator.sln` в **Visual Studio 2022**
-   и нажмите **F5**.
+### Способ 2 — собрать из командной строки
 
-### Вариант Б — отдельный `.exe` без установки .NET (self-contained)
+Если установлен только **Build Tools for Visual Studio** или **MSBuild**:
 
-Один раз нужен установленный **.NET 8 SDK** на компьютере, где собирается
-исполняемый файл. Затем:
-
-```powershell
-dotnet publish PolynomialCalculator -c Release -r win-x64 --self-contained true `
-    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-    -o publish
+```cmd
+"C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" PolynomialCalculator.sln /p:Configuration=Release
 ```
 
-В папке `publish` появится `PolynomialCalculator.exe`, который запускается
-на любой Windows 10/11 x64 **без** установленного .NET.
+Готовый `PolynomialCalculator.exe` появится в
+`PolynomialCalculator\bin\Release\`. Запускается двойным щелчком.
+
+### Способ 3 — просто запустить готовый .exe
+
+После одной сборки `bin\Release\PolynomialCalculator.exe` можно
+скопировать на любой другой Windows-компьютер и запустить — никакие
+runtime'ы доустанавливать не требуется.
 
 ## 3. Как пользоваться программой
 
@@ -106,8 +112,8 @@ dotnet publish PolynomialCalculator -c Release -r win-x64 --self-contained true 
 * Свойство `Degree`, индексатор `this[int power]`, метод `ToArray()`.
 * Перегруженные операторы: `+`, бинарный и унарный `-`, `*`, `/`, `%`,
   `==`, `!=`.
-* Статический метод `DivMod` — деление «уголком», возвращает кортеж
-  `(quotient, remainder)`.
+* Статический метод `DivMod` — деление «уголком», возвращает частное и
+  остаток через `out`-параметры.
 * `Power(int n)` — быстрое возведение в степень (метод последовательных
   возведений в квадрат, схема «binary exponentiation»).
 * `Evaluate(double x)` — вычисление значения по **схеме Горнера**.
@@ -145,19 +151,25 @@ dotnet publish PolynomialCalculator -c Release -r win-x64 --self-contained true 
 
 | Файл | Назначение |
 |------|------------|
-| `PolynomialCalculator.sln`              | Решение Visual Studio |
-| `PolynomialCalculator/PolynomialCalculator.csproj` | Файл проекта .NET 8 / WinForms |
-| `PolynomialCalculator/Program.cs`       | Точка входа приложения |
-| `PolynomialCalculator/MainForm.cs`      | Главная форма |
-| `PolynomialCalculator/LogViewerForm.cs` | Форма просмотра протокола |
-| `PolynomialCalculator/Polynomial.cs`    | Класс «Многочлен» |
-| `PolynomialCalculator/Calculator.cs`    | Класс «Калькулятор» |
-| `PolynomialCalculator/Logger.cs`        | Класс «Протокол» |
+| `PolynomialCalculator.sln`                 | Решение Visual Studio |
+| `PolynomialCalculator/PolynomialCalculator.csproj` | Файл проекта .NET Framework 4.7.2 / WinForms |
+| `PolynomialCalculator/App.config`          | Конфигурация runtime |
+| `PolynomialCalculator/Program.cs`          | Точка входа приложения |
+| `PolynomialCalculator/MainForm.cs`         | Главная форма (логика) |
+| `PolynomialCalculator/MainForm.Designer.cs`| Главная форма (designer) |
+| `PolynomialCalculator/MainForm.resx`       | Ресурсы главной формы |
+| `PolynomialCalculator/LogViewerForm.cs`    | Форма просмотра протокола |
+| `PolynomialCalculator/LogViewerForm.Designer.cs` | Форма просмотра (designer) |
+| `PolynomialCalculator/LogViewerForm.resx`  | Ресурсы формы просмотра |
+| `PolynomialCalculator/Polynomial.cs`       | Класс «Многочлен» |
+| `PolynomialCalculator/Calculator.cs`       | Класс «Калькулятор» |
+| `PolynomialCalculator/Logger.cs`           | Класс «Протокол» |
+| `PolynomialCalculator/Properties/AssemblyInfo.cs` | Атрибуты сборки |
 
 ## 6. Используемые библиотеки
 
-Только стандартные пространства имён .NET 8:
-`System`, `System.Globalization`, `System.IO`, `System.Text`,
-`System.Drawing`, `System.Windows.Forms`.
+Только стандартные сборки .NET Framework 4.7.2:
+`System`, `System.Core`, `System.Drawing`, `System.Windows.Forms`,
+`System.Xml`.
 
 Сторонние библиотеки не используются.

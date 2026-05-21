@@ -1,14 +1,16 @@
 using System;
 using System.Windows.Forms;
 
-namespace PolynomialCalculator;
-
-internal static class Program
+namespace PolynomialCalculator
 {
-    [STAThread]
-    static void Main()
+    internal static class Program
     {
-        ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm());
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
+        }
     }
 }
